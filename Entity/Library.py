@@ -4,6 +4,7 @@ import pandas as pd
 from Entity.User import User
 from Entity.Book import Book
 from Exception.RentException import *
+from Exception.ReturnException import *
 from Config import Config
 
 
@@ -74,4 +75,42 @@ class Library:
                     student_no: int,
                     book_name: str):
         self.refresh()
-        pass
+
+        if student_no not in self.active_users.keys():
+            raise InvalidUserException
+        if book_name not in self.book_name_query.keys():
+            raise InvalidBookException
+
+        book = self.book_info[self.book_name_query[book_name]]
+
+        if not book.is_rented:
+            raise NotRentedException
+        if book.rented_student_no != student_no:
+            raise DifferentRentedOneException
+
+        self.book_sheet.update(f"B{book.id}:E{book.id}", [[""]*4])
+
+    def check_book(self,
+                   book_name: str):
+        self.refresh()
+        if book_name not in self.book_name_query.keys():
+            raise InvalidBookException
+
+        book = self.book_info[self.book_name_query[book_name]]
+
+        return str(book)
+
+    def check_user(self,
+                    student_no: int):
+        self.refresh()
+        if student_no not in self.active_users.keys():
+            raise InvalidUserException
+
+        user = self.active_users[student_no]
+
+        content = f"〈 {user.name}님의 대여중인 책 〉\n"
+        for book_id in user.rented_books:
+            book = self.book_info[book_id]
+            content += f"{book.name} : {datetime.date.strftime(book.rent_date, Config.DATE_FORMAT)} 대여\n"
+
+        return content

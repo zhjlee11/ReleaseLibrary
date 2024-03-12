@@ -1,0 +1,4 @@
+BOOK_NUM_PER_ONE = 3
+DAYS_OF_RENTAL = 31
+
+DATE_FORMAT = "%Y-%m-%d"

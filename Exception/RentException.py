@@ -13,3 +13,7 @@ class MaxBookException(Exception):
 class AlreadyRentedException(Exception):
     def __init__(self):
         super().__init__(f"이미 누군가가 대여한 책입니다.")
+        
+class CanNotRentBookException(Exception):
+    def __init__(self):
+        super().__init__(f"해당 서적은 대여가 불가능한 책입니다.")

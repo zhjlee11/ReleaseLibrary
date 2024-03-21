@@ -14,8 +14,8 @@ class Library:
                  spreadsheet_name: str,
                  active_users_path: str,
                  worksheet: str = "시트1",
-                 timezome: datetime.timezone = datetime.timezone(datetime.timedelta(hours=9))):
-        self.timezone = timezome
+                 timezone: datetime.timezone = datetime.timezone(datetime.timedelta(hours=9))):
+        self.timezone = timezone
 
         gc = gspread.service_account(token_path)
         sh = gc.open(spreadsheet_name)
@@ -119,7 +119,8 @@ class Library:
         result = {"book_name": book.name,
                   "can_rent": book.can_rent,
                   "is_rented": book.is_rented,
-                  "return_deadline": datetime.date.strftime(book.return_deadline, Config.DATE_FORMAT) if book.return_deadline is not None else None}
+                  "return_deadline": datetime.date.strftime(book.return_deadline,
+                                                            Config.DATE_FORMAT) if book.return_deadline is not None else None}
 
         return result
 
@@ -131,13 +132,13 @@ class Library:
 
         user = self.active_users[student_no]
 
-        result = {"student_no" : user.student_no, "name":user.name, "rented_books":{}}
+        result = {"student_no": user.student_no, "name": user.name, "rented_books": {}}
 
         for book_id in user.rented_books:
             book = self.book_info[book_id]
             result["rented_books"][book.name] = {
-                "rented_date" :  datetime.date.strftime(book.rent_date, Config.DATE_FORMAT),
-                "return_deadline" :  datetime.date.strftime(book.return_deadline, Config.DATE_FORMAT)
+                "rented_date": datetime.date.strftime(book.rent_date, Config.DATE_FORMAT),
+                "return_deadline": datetime.date.strftime(book.return_deadline, Config.DATE_FORMAT)
             }
 
         return result
@@ -158,8 +159,8 @@ class Library:
                 diff = (book.return_deadline - now).days
                 if diff <= period_days and now <= book.return_deadline:
                     result[user.student_no].append({"name": user.name,
-                                               "book": book.name,
-                                               "overdue_days": diff})
+                                                    "book": book.name,
+                                                    "overdue_days": diff})
 
         return result
 
@@ -176,8 +177,16 @@ class Library:
                 book = self.book_info[book_id]
                 if book.return_deadline < now:
                     result[user.student_no].append({"name": user.name,
-                                               "book": book.name,
-                                               "overdue_days": (now - book.return_deadline).days})
+                                                    "book": book.name,
+                                                    "overdue_days": (now - book.return_deadline).days})
 
+        return result
+
+    def get_book_list(self):
+        self.refresh()
+        result = []
+
+        for book in self.book_info.values():
+            result.append({"book_name":book.name, "available":book.can_rent and not book.is_rented})
 
         return result

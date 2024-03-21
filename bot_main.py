@@ -83,7 +83,7 @@ async def on_message(message):
                 content = f"# {result['data']['book_name']} 정보\n"
                 content += f"대여 가능 여부 : {'가능' if result['data']['can_rent'] else '불가능'}\n"
                 content += f"상태 : {'대출 중' if result['data']['is_rented'] else '비치 중'}\n"
-                if result['data']['can_rent'] and not result['data']['is_rented']:
+                if result['data']['can_rent'] and result['data']['is_rented']:
                     content += f"예상 반납 날짜 : {result['data']['return_deadline']}"
 
                 await message.reply(content)
@@ -127,8 +127,24 @@ async def on_message(message):
                     await message.reply(f'연체자 조회에 실패하였습니다.\n{result["errorMessage"]}')
             else:
                 await message.reply(f'권한이 없습니다.')
+
+        elif message.content.startswith('/도서 목록'):
+            result = requests.get(f"{API_ADDRESS}/get_book_list").json()
+            if result["result"] == "success":
+                content = f"# Release 도서 목록\n"
+                content += f"*취소선이 그어진 책은 현재 대여가 불가능한 책입니다.*\n\n"
+                for book in result["data"]:
+                    book_name = book["book_name"]
+                    if not book["available"]:
+                        book_name = f"~~{book_name}~~"
+                    content += f"> {book_name}\n"
+                await message.reply(content)
+            else:
+                await message.reply(f'도서 목록 조회에 실패하였습니다.\n{result["errorMessage"]}')
         else:
             content = f"# Release 도서 관리 챗봇 명령어 도움말\n"
+            content += f"## /도서 목록\n"
+            content += f"대여 가능한 도서 목록을 확인합니다.\n"
             content += f"## /도서 대여 [학번] [도서 이름]\n"
             content += f"도서를 대여합니다.\n"
             content += f"## /도서 반납 [학번] [도서 이름]\n"
